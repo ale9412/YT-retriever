@@ -6,6 +6,7 @@ import pickle
 import pprint
 import requests
 
+from personal import authenticate
 
 
 class Builder(object):
@@ -35,6 +36,35 @@ class Builder(object):
         response = requests.get(full_url, headers=self._headers, params=self.params)
         return response.json()
 
+def collector():
+    """
+    Gather all the information from the channels ids
+    """
+    channels = Builder("channels")
+
+    with open("ids.pickle", "rb") as fp:
+        items = pickle.load(fp)
+
+    ids = list(items["ids"])
+    start = 0
+    while True:
+        end = start + 50
+        batch = ids[start:end]
+        if batch:
+            batch = ",".join(batch)
+            # If i haven´t reach the end of the list, request info
+            response = channels.list(
+                part="snippet,statistics",
+                id=batch,
+                maxResults=50,
+                fields="items(id,snippet(title,publishedAt,country),statistics(viewCount,commentCount,subscriberCount,videoCount))",
+            )
+            print(response)
+            break
+            # start = end
+        else:
+            break
+            
 
 def discover():
     iters = 0
@@ -84,7 +114,7 @@ def discover():
 
 
 if __name__ == "__main__":
-
-  discover()
+    collector()
+#   discover()
     
 
